@@ -1,0 +1,10 @@
+{
+  "serviceId":"4",
+  "origStation":"U Schlump",
+  "origArrivalTimeLow" :"06:30:00",
+  "origArrivalTimeHigh" :"07:10:00",
+  "destStation" :"U Eppendorfer Baum",
+  "destArrivalTimeLow":"06:30:00",
+  "destArrivalTimeHigh":"10:00:00",
+  "travelDate":"20171031"
+}
