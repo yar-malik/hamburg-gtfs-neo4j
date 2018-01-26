@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.neo4j.annotation.Query;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
         With projection:
         http://localhost:8080/stoptimes/search/getMyTrips?serviceId=4&origStation=WESTWOOD&origArrivalTimeLow=06:30:00&origArrivalTimeHigh=07:10:00&destStation=HOBOKEN&destArrivalTimeLow=07:00:00&destArrivalTimeHigh=08:00:00&sort=departureTimeInt,asc&projection=TripPlanResult
     */
+    //----------------------------------------------------------------------------------------------------------
     @Query(
             "MATCH\n" +
             "  (cd:CalendarDate)\n" +
@@ -58,33 +60,16 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             "   stoptimes.departure_time_int AS departureTimeInt, \n" +
             "   trip.id AS tripId"
             )
-    <T> Page<T> getMyTrips(String travelDate,
-                              String origStation,
-                              String origArrivalTimeLow,
-                              String origArrivalTimeHigh,
-                              String destStation,
-                              String destArrivalTimeLow,
-                              String destArrivalTimeHigh,
-                              Pageable pageRequest,
-                              Class<T> type);
+    Page<Stoptime> getMyTrips(@Param("travelDate") String travelDate,
+                              @Param("origStation") String origStation,
+                              @Param("origArrivalTimeLow") String origArrivalTimeLow,
+                              @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
+                              @Param("destStation") String destStation,
+                              @Param("destArrivalTimeLow") String destArrivalTimeLow,
+                              @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
+                              Pageable pageRequest);
 
-
-    @Query(" MATCH(s:Stop), (e:Stop) \n" +
-                    " where s.name starts with \"U Schlump\" and e.name starts with \"U Eppendorfer Baum\" \n" +
-                    " match p = shortestpath((s)-[*]-(e))\n" +
-                    " return p, s.id as stopid \n")
-    <T> Page<T> getRandomAsfand(
-            String travelDate,
-            String origStation,
-            String origArrivalTimeLow,
-            String origArrivalTimeHigh,
-            String destStation,
-            String destArrivalTimeLow,
-            String destArrivalTimeHigh,
-            Pageable pageRequest,
-            Class<T> type);
-
-
+    //----------------------------------------------------------------------------------------------------------
     @Query("MATCH\n" +
             "  (cd:CalendarDate)\n" +
             "WHERE \n" +
@@ -133,14 +118,55 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                                         Class<T> type
                                     );
 
-
+    //----------------------------------------------------------------------------------------------------------
     @Query(" MATCH(s:Stop), (e:Stop)\n" +
-                    " where s.name starts with \"U Schlump\" and e.name starts with \"U Eppendorfer Baum\"\n" +
+                    " where s.name = {origStation} and e.name = {destStation} \n" +
                     " match p = shortestpath((s)-[*]-(e))\n" +
-                    " return p\n" +
-                    " limit 10 \n" +
+                    " return p, s.id as stopid " +
                     " ;")
-    List<String> runOneTrip();
+    Page<Stoptime> oneStationAsfandyar(@Param("origStation") String origStation,
+                                       @Param("destStation") String destStation,
+                                     Pageable pageRequest);
 
+    //----------------------------------------------------------------------------------------------------------
+    @Query(" MATCH(s:Stop), (e:Stop) \n" +
+            " where s.name starts with \"U Schlump\" and e.name starts with \"Sartoriusstraße\" \n" +
+            " match p = shortestpath((s)-[*]-(e))\n" +
+            " return p, s.id as stopid \n")
+    <T> Page<T> planTripAsfandyar(
+            String travelDate,
+            String origStation,
+            String origArrivalTimeLow,
+            String origArrivalTimeHigh,
+            String destStation,
+            String destArrivalTimeLow,
+            String destArrivalTimeHigh,
+            Pageable pageRequest,
+            Class<T> type);
+
+
+    //----------------------------------------------------------------------------------------------------------
+    @Query(" match (tu:Stop {name: {origStation} })--(tu_st:Stoptime)  \n" +
+            " where tu_st.departure_time > {origArrivalTimeLow}  \n" +
+            " AND tu_st.departure_time < {origArrivalTimeHigh}  \n" +
+            " with tu, tu_st  \n" +
+            " match (ant:Stop {name:{destStation}})--(ant_st:Stoptime)  \n" +
+            " where ant_st.arrival_time < {destArrivalTimeHigh}  \n" +
+            " AND ant_st.arrival_time > {destArrivalTimeLow}  \n" +
+            " and ant_st.arrival_time > tu_st.departure_time  \n" +
+            " with ant,ant_st,tu, tu_st  \n" +
+            " match p = allshortestpaths((tu_st)-[*]->(ant_st))  \n" +
+            " with nodes(p) as n, tu, ant\n" +
+            " unwind n as nodes  \n" +
+            " match (nodes)-[r]-()  \n" +
+            " return nodes,r,tu,ant, tu.id as stopid")
+    Page<Stoptime> specificRouteAsfand(
+                        @Param("origStation") String origStation,
+                        @Param("origArrivalTimeLow") String origArrivalTimeLow,
+                        @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
+                        @Param("destStation") String destStation,
+                        @Param("destArrivalTimeLow") String destArrivalTimeLow,
+                        @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
+                        Pageable pageRequest);
 
 }
