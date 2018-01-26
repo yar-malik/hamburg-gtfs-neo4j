@@ -90,22 +90,22 @@ public class Neo4jWebServiceController {
 
     }
 
-    @RequestMapping(value = "/planTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ArrayList <ArrayList <ArrayList<Stoptime>>>  planTrip( @RequestBody TripPlan plan){
-
-        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
-                and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
-        Pageable pageable = new PageRequest(0, 1000000, sort);
-
-        ArrayList <ArrayList <ArrayList<Stoptime>>> tripPlanNoTransfer =  planTripNoTransfer(plan);
-        if (tripPlanNoTransfer.size() > 0) {
-            return tripPlanNoTransfer;
-        } else {
-            tripPlanNoTransfer =  planTripOneTransfer(plan);
-            return tripPlanNoTransfer;
-        }
-    }
+//    @RequestMapping(value = "/planTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+//    @ResponseBody
+//    public ArrayList <ArrayList <ArrayList<Stoptime>>>  planTrip( @RequestBody TripPlan plan){
+//
+//        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
+//                and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
+//        Pageable pageable = new PageRequest(0, 1000000, sort);
+//
+//        ArrayList <ArrayList <ArrayList<Stoptime>>> tripPlanNoTransfer =  planTripNoTransfer(plan);
+//        if (tripPlanNoTransfer.size() > 0) {
+//            return tripPlanNoTransfer;
+//        } else {
+//            tripPlanNoTransfer =  planTripOneTransfer(plan);
+//            return tripPlanNoTransfer;
+//        }
+//    }
 
     @RequestMapping(value = "/planTripNoTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -116,14 +116,6 @@ public class Neo4jWebServiceController {
         Sort sort = new Sort(Sort.Direction.ASC, "tripId").
                 and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
         Pageable pageable = new PageRequest(0, 1000000, sort);
-
-//        System.out.println(plan.getTravelDate());
-//        System.out.println(plan.getOrigStation());
-//        System.out.println(plan.getOrigArrivalTimeLow());
-//        System.out.println(plan.getOrigArrivalTimeHigh());
-//        System.out.println(plan.getDestStation());
-//        System.out.println(plan.getDestArrivalTimeLow());
-//        System.out.println(plan.getDestArrivalTimeHigh());
 
         Page<Stoptime> imResult = stoptimeRepository.getMyTrips(
                 plan.getTravelDate(),
@@ -143,94 +135,31 @@ public class Neo4jWebServiceController {
             planWithLegs.add(leg);
             allPlansWithLegs.add((planWithLegs));
         }
-
         return allPlansWithLegs;
-
     }
 
-    @RequestMapping(value = "/planTripOneTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/oneTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ArrayList <ArrayList <ArrayList<Stoptime>>>  planTripOneTransfer( @RequestBody TripPlan plan){
+    public ArrayList <ArrayList <ArrayList<Stoptime>>>  oneTransfer( @RequestBody TripPlan plan){
+
         ArrayList<ArrayList<ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
-//        System.out.println(plan.getTravelDate());
-//        System.out.println(plan.getOrigStation());
-//        System.out.println(plan.getOrigArrivalTimeLow());
-//        System.out.println(plan.getOrigArrivalTimeHigh());
-//        System.out.println("DestStation: " + plan.getDestStation());
-//        System.out.println(plan.getDestArrivalTimeLow());
-//        System.out.println(plan.getDestArrivalTimeHigh());
-
-        long curRec = 0L;
-
-        while(true) {
-
-            Sort sort = new Sort(Sort.Direction.ASC, "tripId").
-                    and(new Sort(Sort.Direction.ASC, "departureTimeInt"));
-            Pageable pageable = new PageRequest(0, 1000000, sort);
-
-            List<Stoptime> imResult = stoptimeRepository.getMyTripsOneStop(
-                    plan.getTravelDate(),
-                    plan.getOrigStation(),
-                    plan.getOrigArrivalTimeLow(),
-                    plan.getOrigArrivalTimeHigh(),
-                    plan.getDestStation(),
-                    plan.getDestArrivalTimeLow(),
-                    plan.getDestArrivalTimeHigh(),
-                    curRec,
-                    Stoptime.class);
-
-            System.out.println("Result: " + imResult.toString());
-
-            ArrayList<ArrayList<Stoptime>> allLegs = breakupTrips(imResult);
-
-            //Multi leg single plan
-            ArrayList<ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
-            for (ArrayList<Stoptime> leg : allLegs) {
-                planWithLegs.add(leg);
-            }
-
-            if (planWithLegs != null && planWithLegs.size() > 0) {
-                allPlansWithLegs.add((planWithLegs));
-            } else {
-                return allPlansWithLegs;
-            }
-
-            curRec++;
-        }
-
-    }
-
-    @RequestMapping(value = "/planTripAsfandyar", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ArrayList <ArrayList <ArrayList<Stoptime>>> planTripAsfandyar(@RequestBody TripPlan plan){
-
-        ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
-
         Sort sort = new Sort(Sort.Direction.ASC, "stopid");
-        Pageable pageable = new PageRequest(0, 1000000, sort);
+        Pageable pageable = new PageRequest(0, 1000, sort);
 
-        System.out.println(plan.getTravelDate());
-        System.out.println(plan.getOrigStation());
-        System.out.println(plan.getOrigArrivalTimeLow());
-        System.out.println(plan.getOrigArrivalTimeHigh());
-        System.out.println(plan.getDestStation());
-        System.out.println(plan.getDestArrivalTimeLow());
-        System.out.println(plan.getDestArrivalTimeHigh());
-
-        Page<Stoptime> imResult = stoptimeRepository.planTripAsfandyar(
-                plan.getTravelDate(),
+        Page<Stoptime> imResult = stoptimeRepository.oneTransfer(
                 plan.getOrigStation(),
                 plan.getOrigArrivalTimeLow(),
                 plan.getOrigArrivalTimeHigh(),
                 plan.getDestStation(),
                 plan.getDestArrivalTimeLow(),
                 plan.getDestArrivalTimeHigh(),
-                pageable,
-                Stoptime.class);
+                pageable);
 
-
+        System.out.println(imResult);
         ArrayList <ArrayList<Stoptime>> finalResult = breakupTrips( imResult);
+
+        System.out.println(finalResult.size());
 
         for (ArrayList<Stoptime> leg : finalResult) {
             ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
@@ -239,11 +168,9 @@ public class Neo4jWebServiceController {
         }
 
         return allPlansWithLegs;
-
     }
 
-
-    @RequestMapping(value = "/oneStationAsfandyar", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/shortestPath", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ArrayList <ArrayList <ArrayList<Stoptime>>> basicRoutePost(@RequestBody TripPlan plan){
 
@@ -252,7 +179,7 @@ public class Neo4jWebServiceController {
         Sort sort = new Sort(Sort.Direction.ASC, "stopid");
         Pageable pageable = new PageRequest(0, 10000, sort);
 
-        Page<Stoptime> resultlist = stoptimeRepository.oneStationAsfandyar(
+        Page<Stoptime> resultlist = stoptimeRepository.shortestPath(
                         plan.getOrigStation(),
                         plan.getDestStation(),
                         pageable);
@@ -268,24 +195,16 @@ public class Neo4jWebServiceController {
         return allPlansWithLegs;
     }
 
-    @RequestMapping(value = "/specificRouteAsfand", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/specificTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ArrayList <ArrayList <ArrayList<Stoptime>>> specificRouteAsfand(@RequestBody TripPlan plan){
 
         ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
         Sort sort = new Sort(Sort.Direction.ASC, "stopid");
-        Pageable pageable = new PageRequest(0, 1000000, sort);
+        Pageable pageable = new PageRequest(0, 100000, sort);
 
-        System.out.println(plan.getTravelDate());
-        System.out.println(plan.getOrigStation());
-        System.out.println(plan.getOrigArrivalTimeLow());
-        System.out.println(plan.getOrigArrivalTimeHigh());
-        System.out.println(plan.getDestStation());
-        System.out.println(plan.getDestArrivalTimeLow());
-        System.out.println(plan.getDestArrivalTimeHigh());
-
-        Page<Stoptime> imResult = stoptimeRepository.specificRouteAsfand(
+        Page<Stoptime> imResult = stoptimeRepository.specificTrip(
                 plan.getOrigStation(),
                 plan.getOrigArrivalTimeLow(),
                 plan.getOrigArrivalTimeHigh(),
@@ -317,8 +236,8 @@ public class Neo4jWebServiceController {
 
         for (Stoptime stoptime: test) {
 
-//            System.out.println("Stoptime: " + stoptime);
-//            System.out.println("Stoptime.getTrips: " + stoptime.getTrips());
+//            System.out.println("stoptime: " + stoptime);
+//            System.out.println("trips: " + stoptime.getTrips());
 
             if(stoptime.getTrips() != null) {
                 Trip currentTrip = stoptime.getTrips().iterator().next();

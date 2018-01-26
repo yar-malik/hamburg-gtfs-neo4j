@@ -70,53 +70,30 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                               Pageable pageRequest);
 
     //----------------------------------------------------------------------------------------------------------
-    @Query("MATCH\n" +
-            "  (cd:CalendarDate)\n" +
-            "WHERE \n" +
-            "    cd.date = {travelDate} AND \n" +
-            "    cd.exception_type = '1'\n" +
-            "WITH cd\n" +
-            "MATCH\n" +
-            "    p3=(orig:Stop {name: {origStation}})<-[:LOCATED_AT]-(st_orig:Stoptime)-[r1:PART_OF_TRIP]->(trp1:Trip),\n" +
-            "    p4=(dest:Stop {name: 'U Eppendorfer Baum'})<-[:LOCATED_AT]-(st_dest:Stoptime)-[r2:PART_OF_TRIP]->(trp2:Trip),\n" +
-            "    p1=(st_orig)-[im1:PRECEDES*]->(st_midway_arr:Stoptime),\n"+
-            "    p5=(st_midway_arr)-[:LOCATED_AT]->(midway:Stop)<-[:LOCATED_AT]-(st_midway_dep:Stoptime),\n" +
-            "    p2=(st_midway_dep)-[im2:PRECEDES*]->(st_dest)\n" +
-            "WHERE\n" +
-            "  st_orig.departure_time > {origArrivalTimeLow}\n" +
-            "  AND st_orig.departure_time < {origArrivalTimeHigh}\n" +
-            "  AND st_dest.arrival_time < {destArrivalTimeHigh}\n" +
-            "  AND st_dest.arrival_time > {destArrivalTimeLow}\n" +
-            "  AND st_midway_arr.arrival_time > st_orig.departure_time\n"+
-            "  AND st_midway_dep.departure_time > st_midway_arr.arrival_time\n" +
-            "  AND st_dest.arrival_time > st_midway_dep.departure_time\n" +
-            "  AND trp1.service_id = cd.service_id\n" +
-            "  AND trp2.service_id = cd.service_id\n" +
-            "WITH\n"+
-            "  st_orig, st_dest, nodes(p1) + nodes(p2) AS allStops1\n" +
-            "ORDER BY\n" +
-            "    (st_dest.arrival_time_int-st_orig.departure_time_int) ASC\n" +
-            "SKIP {skip} LIMIT 1\n" +
-            "UNWIND\n" +
-            "  allStops1 AS stoptime\n" +
-            "MATCH\n" +
-            "  p6=(loc:Stop)<-[r:LOCATED_AT]-(stoptime)-[r2:PART_OF_TRIP]->(trp5:Trip),\n" +
-            "  (stoptime)-[im1:PRECEDES*]->(stoptime2)\n" +
-            "RETURN\n" +
-            "  p6\n" +
-            "ORDER BY stoptime.departure_time_int ASC\n" +
-            ";")
-    <T> List<T> getMyTripsOneStop(
-                                        String travelDate,
-                                        String origStation,
-                                        String origArrivalTimeLow,
-                                        String origArrivalTimeHigh,
-                                        String destStation,
-                                        String destArrivalTimeLow,
-                                        String destArrivalTimeHigh,
-                                        Long skip,
-                                        Class<T> type
-                                    );
+    //this is not working for me. Dont know why. Have to change some stuff here
+    @Query("MATCH (tu:Stop {name:\"U Schlump\"})--(st_tu:Stoptime)--(trip1:Trip),  \n" +
+            " (ar:Stop {name:\"Sartoriusstraße\"})--(st_ar:Stoptime)--(trip2:Trip),  \n" +
+            " p1=(st_tu)-[:PRECEDES*]->(st_midway_arr:Stoptime),  \n" +
+            " (st_midway_arr)--(midway:Stop),  \n" +
+            " (midway)--(st_midway_dep:Stoptime),  \n" +
+            " p2=(st_midway_dep)-[:PRECEDES*]->(st_ar) \n" +
+            " WHERE  \n" +
+            " st_tu.departure_time > \"21:00:00\"  \n" +
+            " AND st_tu.departure_time < \"21:08:00\"  \n" +
+            " AND st_ar.arrival_time > \"21:00:00\"  \n" +
+            " AND st_ar.arrival_time < \"21:23:00\"\n" +
+            " AND st_midway_arr.arrival_time > st_tu.departure_time  \n" +
+            " AND st_midway_dep.departure_time > st_midway_arr.arrival_time  \n" +
+            " AND st_ar.arrival_time > st_midway_dep.departure_time  \n" +
+            " RETURN  \n" +
+            " tu,st_tu,ar,st_ar,p1,p2,midway, tu.arrival_time as stopid, trip1, trip2")
+    Page<Stoptime> oneTransfer(@Param("origStation") String origStation,
+                             @Param("origArrivalTimeLow") String origArrivalTimeLow,
+                             @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
+                             @Param("destStation") String destStation,
+                             @Param("destArrivalTimeLow") String destArrivalTimeLow,
+                             @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
+                               Pageable pageRequest);
 
     //----------------------------------------------------------------------------------------------------------
     @Query(" MATCH(s:Stop), (e:Stop)\n" +
@@ -124,26 +101,9 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                     " match p = shortestpath((s)-[*]-(e))\n" +
                     " return p, s.id as stopid " +
                     " ;")
-    Page<Stoptime> oneStationAsfandyar(@Param("origStation") String origStation,
+    Page<Stoptime> shortestPath(@Param("origStation") String origStation,
                                        @Param("destStation") String destStation,
                                      Pageable pageRequest);
-
-    //----------------------------------------------------------------------------------------------------------
-    @Query(" MATCH(s:Stop), (e:Stop) \n" +
-            " where s.name starts with \"U Schlump\" and e.name starts with \"Sartoriusstraße\" \n" +
-            " match p = shortestpath((s)-[*]-(e))\n" +
-            " return p, s.id as stopid \n")
-    <T> Page<T> planTripAsfandyar(
-            String travelDate,
-            String origStation,
-            String origArrivalTimeLow,
-            String origArrivalTimeHigh,
-            String destStation,
-            String destArrivalTimeLow,
-            String destArrivalTimeHigh,
-            Pageable pageRequest,
-            Class<T> type);
-
 
     //----------------------------------------------------------------------------------------------------------
     @Query(" match (tu:Stop {name: {origStation} })--(tu_st:Stoptime)  \n" +
@@ -160,7 +120,7 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
             " unwind n as nodes  \n" +
             " match (nodes)-[r]-()  \n" +
             " return nodes,r,tu,ant, tu.id as stopid")
-    Page<Stoptime> specificRouteAsfand(
+    Page<Stoptime> specificTrip(
                         @Param("origStation") String origStation,
                         @Param("origArrivalTimeLow") String origArrivalTimeLow,
                         @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
@@ -168,5 +128,4 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                         @Param("destArrivalTimeLow") String destArrivalTimeLow,
                         @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
                         Pageable pageRequest);
-
 }

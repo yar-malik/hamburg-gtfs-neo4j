@@ -67,3 +67,21 @@ match (tu:Stop {name: "U Schlump"})--(tu_st:Stoptime)
  unwind n as nodes  
  match (nodes)-[r]-()  
  return nodes,r 
+
+---------------------------------------------------------
+ MATCH (tu:Stop {name:"U Schlump"})--(st_tu:Stoptime),  
+ (ar:Stop {name:"Sartoriusstraße"})--(st_ar:Stoptime),  
+ p1=((st_tu)-[:PRECEDES*]->(st_midway_arr:Stoptime)),  
+ (st_midway_arr)--(midway:Stop),  
+ (midway)--(st_midway_dep:Stoptime),  
+ p2=((st_midway_dep)-[:PRECEDES*]->(st_ar))  
+ WHERE  
+ st_tu.departure_time > "21:00:00"  
+ AND st_tu.departure_time < "22:00:00"  
+ AND st_midway_arr.arrival_time > st_tu.departure_time  
+ AND st_midway_dep.departure_time > st_midway_arr.arrival_time  
+ AND st_ar.arrival_time > st_midway_dep.departure_time  
+ RETURN  
+ tu,st_tu,ar,st_ar,p1,p2,midway  
+ order by (st_ar.arrival_time_int-st_tu.departure_time_int) ASC  
+ limit 1  
