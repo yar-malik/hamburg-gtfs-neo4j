@@ -177,14 +177,18 @@ public class Neo4jWebServiceController {
         ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
         Sort sort = new Sort(Sort.Direction.ASC, "stopid");
-        Pageable pageable = new PageRequest(0, 10000, sort);
+        Pageable pageable = new PageRequest(0, 1000, sort);
 
         Page<Stoptime> resultlist = stoptimeRepository.shortestPath(
                         plan.getOrigStation(),
                         plan.getDestStation(),
                         pageable);
 
+        System.out.println("shortestpath: "+ resultlist);
+
         ArrayList <ArrayList<Stoptime>> finalResult = breakupTrips( resultlist);
+
+        System.out.println("finalResult: " + finalResult);
 
         for (ArrayList<Stoptime> leg : finalResult) {
             ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
@@ -247,6 +251,7 @@ public class Neo4jWebServiceController {
                     result.add(currentSet);
                     lastTripId = currentTrip.getTripId();
                 }
+
                 TripPlanResultPjcn tripPlan = projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime);
 
                 currentSet.add(tripPlan);

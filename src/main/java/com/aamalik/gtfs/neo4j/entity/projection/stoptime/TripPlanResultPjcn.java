@@ -17,7 +17,11 @@ public interface TripPlanResultPjcn {
     @Value("#{target.stops.iterator().next().getName()}")
     public String getStopName();
 
-    //public Set<StopNamePjcn> getStops();
+    @Value("#{target.stops.iterator().next().getLongitude()}")
+    public String getLongitude();
+
+    @Value("#{target.stops.iterator().next().getLatitude()}")
+    public String getLatitude();
 
     @Value("#{target.trips.iterator().next().getTripId()}")
     public String getTripId();
