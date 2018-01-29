@@ -1,6 +1,5 @@
 package com.aamalik.gtfs.neo4j.dto;
 
-
 public class TripPlan {
 
     private String travelDate;

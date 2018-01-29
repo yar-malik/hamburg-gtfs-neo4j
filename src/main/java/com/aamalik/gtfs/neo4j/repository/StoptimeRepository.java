@@ -95,7 +95,7 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                              @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
                                Pageable pageRequest);
 
-    //----------------------------------------------------------------------------------------------------------
+    //---------------------------SHORTEST PATH(DIJKSTRA lenght)-------------------------------------------------------------------------------
     @Query(" MATCH(s:Stop), (e:Stop)\n" +
                     " where s.name = {origStation} and e.name = {destStation} \n" +
                     " match p = shortestpath((s)-[*]-(e))\n" +
@@ -105,7 +105,7 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                                        @Param("destStation") String destStation,
                                      Pageable pageRequest);
 
-    //----------------------------------------------------------------------------------------------------------
+    //---------------------------SPECIFIC PATH-------------------------------------------------------------------------------
     @Query(" match (tu:Stop {name: {origStation} })--(tu_st:Stoptime)  \n" +
             " where tu_st.departure_time > {origArrivalTimeLow}  \n" +
             " AND tu_st.departure_time < {origArrivalTimeHigh}  \n" +
@@ -128,4 +128,26 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                         @Param("destArrivalTimeLow") String destArrivalTimeLow,
                         @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
                         Pageable pageRequest);
+
+
+    //---------------------------SPECIFIC PATH WITH DISTANCE-------------------------------------------------------------------------------
+    @Query(" match (tu:Stop {name: {origStation} })--(tu_st:Stoptime)  \n" +
+            " with tu, tu_st  \n" +
+            " match (ant:Stop {name:{destStation}})--(ant_st:Stoptime)  \n" +
+            " where ant_st.arrival_time > tu_st.departure_time  \n" +
+            " with ant,ant_st,tu, tu_st  \n" +
+            " match p = allshortestpaths((tu_st)-[*]->(ant_st))  \n" +
+            " with nodes(p) as n, tu, ant, p \n" +
+            " unwind n as nodes  \n" +
+            " match (nodes)-[r]-()  \n" +
+            " return nodes, length(p) as distance")
+    Page<Stoptime> specificTripWithDistance(
+                    @Param("origStation") String origStation,
+                    @Param("origArrivalTimeLow") String origArrivalTimeLow,
+                    @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
+                    @Param("destStation") String destStation,
+                    @Param("destArrivalTimeLow") String destArrivalTimeLow,
+                    @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
+                    Pageable pageRequest);
+
 }

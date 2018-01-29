@@ -4,8 +4,10 @@ import com.aamalik.gtfs.neo4j.dto.TripPlan;
 import com.aamalik.gtfs.neo4j.entity.*;
 import com.aamalik.gtfs.neo4j.repository.*;
 import com.aamalik.gtfs.neo4j.entity.*;
-import com.aamalik.gtfs.neo4j.entity.projection.stoptime.TripPlanResultPjcn;
+import com.aamalik.gtfs.neo4j.entity.projection.stoptime.TripPlanResultProjection;
 import com.aamalik.gtfs.neo4j.repository.*;
+import com.sun.corba.se.impl.orbutil.graph.Graph;
+import org.neo4j.graphalgo.GraphAlgoFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -64,7 +66,10 @@ public class Neo4jWebServiceController {
     @ResponseBody
     //Example id: 13
     public Route getRoute(@PathVariable String routeId, Model model) {
-        return routeRepository.findByRouteId(routeId,1);
+        Route r = routeRepository.findByRouteId(routeId,1);
+
+        return null;
+
     }
 
     @GetMapping(path = "/stop/{stopName}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -89,23 +94,6 @@ public class Neo4jWebServiceController {
         return tripRepository.findByTripId(tripId, 1);
 
     }
-
-//    @RequestMapping(value = "/planTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-//    @ResponseBody
-//    public ArrayList <ArrayList <ArrayList<Stoptime>>>  planTrip( @RequestBody TripPlan plan){
-//
-//        Sort sort = new Sort(Sort.Direction.ASC, "tripId").
-//                and( new Sort(Sort.Direction.ASC, "departureTimeInt"));
-//        Pageable pageable = new PageRequest(0, 1000000, sort);
-//
-//        ArrayList <ArrayList <ArrayList<Stoptime>>> tripPlanNoTransfer =  planTripNoTransfer(plan);
-//        if (tripPlanNoTransfer.size() > 0) {
-//            return tripPlanNoTransfer;
-//        } else {
-//            tripPlanNoTransfer =  planTripOneTransfer(plan);
-//            return tripPlanNoTransfer;
-//        }
-//    }
 
     @RequestMapping(value = "/planTripNoTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
@@ -184,11 +172,11 @@ public class Neo4jWebServiceController {
                         plan.getDestStation(),
                         pageable);
 
-        System.out.println("shortestpath: "+ resultlist);
+//        System.out.println("shortestpath: "+ resultlist);
 
         ArrayList <ArrayList<Stoptime>> finalResult = breakupTrips( resultlist);
 
-        System.out.println("finalResult: " + finalResult);
+//        System.out.println("finalResult: " + finalResult);
 
         for (ArrayList<Stoptime> leg : finalResult) {
             ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
@@ -201,7 +189,7 @@ public class Neo4jWebServiceController {
 
     @RequestMapping(value = "/specificTrip", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ArrayList <ArrayList <ArrayList<Stoptime>>> specificRouteAsfand(@RequestBody TripPlan plan){
+    public ArrayList <ArrayList <ArrayList<Stoptime>>> specificRoute(@RequestBody TripPlan plan){
 
         ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
@@ -228,6 +216,72 @@ public class Neo4jWebServiceController {
         return allPlansWithLegs;
     }
 
+    @RequestMapping(value = "/specificTripWithDistance", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ArrayList <ArrayList <ArrayList<Stoptime>>> specificRouteWithDistance(@RequestBody TripPlan plan){
+
+        ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
+
+        Sort sort = new Sort(Sort.Direction.ASC, "distance");
+        Pageable pageable = new PageRequest(0, 100, sort);
+
+        Page<Stoptime> imResult = stoptimeRepository.specificTripWithDistance(
+                plan.getOrigStation(),
+                plan.getOrigArrivalTimeLow(),
+                plan.getOrigArrivalTimeHigh(),
+                plan.getDestStation(),
+                plan.getDestArrivalTimeLow(),
+                plan.getDestArrivalTimeHigh(),
+                pageable);
+
+        System.out.println("imResult: " + imResult);
+        System.out.println("imResult Element: " + imResult.getTotalElements());
+
+        ArrayList <ArrayList<Stoptime>> finalResult = breakupDistance(imResult);
+
+        for (ArrayList<Stoptime> leg : finalResult) {
+            ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
+            planWithLegs.add(leg);
+            allPlansWithLegs.add((planWithLegs));
+        }
+
+        return allPlansWithLegs;
+    }
+
+    private  ArrayList <ArrayList<Stoptime>> breakupDistance(Page<Stoptime> test) {
+
+        ArrayList <ArrayList<Stoptime>> result = new ArrayList<>();
+
+        String lastTripId = null;
+        ArrayList currentSet = null;
+
+        System.out.println("Content: " + test.getContent());
+
+        for (Stoptime stoptime: test.getContent()) {
+
+//            System.out.println("stoptime: " + stoptime);
+            System.out.println("stoptime: " + stoptime.getTrips());
+
+            if(stoptime.getTrips() != null) {
+                Trip currentTrip = stoptime.getTrips().iterator().next();
+
+                if (lastTripId == null || !lastTripId.equals(currentTrip.getTripId())) {
+                    currentSet = new ArrayList<Stoptime>();
+                    result.add(currentSet);
+                    lastTripId = currentTrip.getTripId();
+                }
+
+                System.out.println("currentSet: " + currentSet);
+                TripPlanResultProjection tripPlan = projectionFactory.createProjection(TripPlanResultProjection.class, stoptime);
+
+                currentSet.add(tripPlan);
+            }
+        }
+        return result;
+
+    }
+
+
     private  ArrayList <ArrayList<Stoptime>> breakupTrips(Page<Stoptime> test) {
         return breakupTrips(test.getContent());
     }
@@ -240,9 +294,6 @@ public class Neo4jWebServiceController {
 
         for (Stoptime stoptime: test) {
 
-//            System.out.println("stoptime: " + stoptime);
-//            System.out.println("trips: " + stoptime.getTrips());
-
             if(stoptime.getTrips() != null) {
                 Trip currentTrip = stoptime.getTrips().iterator().next();
 
@@ -252,12 +303,11 @@ public class Neo4jWebServiceController {
                     lastTripId = currentTrip.getTripId();
                 }
 
-                TripPlanResultPjcn tripPlan = projectionFactory.createProjection(TripPlanResultPjcn.class, stoptime);
+                TripPlanResultProjection tripPlan = projectionFactory.createProjection(TripPlanResultProjection.class, stoptime);
 
                 currentSet.add(tripPlan);
             }
         }
         return result;
     }
-
 }

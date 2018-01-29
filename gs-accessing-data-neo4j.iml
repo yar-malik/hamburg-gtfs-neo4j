@@ -66,5 +66,20 @@
     <orderEntry type="library" name="Maven: org.neo4j:neo4j-collections:3.3.2" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j:neo4j-primitive-collections:3.3.2" level="project" />
     <orderEntry type="library" name="Maven: org.neo4j:neo4j-unsafe:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-graph-algo:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-kernel:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-values:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-io:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-csv:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-logging:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-lucene-upgrade:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-core:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.lucene:lucene-backward-codecs:5.5.0" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-configuration:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-index:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: org.neo4j:neo4j-ssl:3.3.2" level="project" />
+    <orderEntry type="library" name="Maven: io.netty:netty-all:4.1.17.Final" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcpkix-jdk15on:1.53" level="project" />
+    <orderEntry type="library" name="Maven: org.bouncycastle:bcprov-jdk15on:1.53" level="project" />
   </component>
 </module>

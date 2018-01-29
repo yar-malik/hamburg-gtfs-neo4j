@@ -36,6 +36,14 @@
 			<artifactId>neo4j-graphdb-api</artifactId>
 			<version>3.3.2</version>
 		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.neo4j/neo4j-graph-algo -->
+		<dependency>
+			<groupId>org.neo4j</groupId>
+			<artifactId>neo4j-graph-algo</artifactId>
+			<version>3.3.2</version>
+		</dependency>
+
 	</dependencies>
 
 
