@@ -106,48 +106,30 @@ public interface StoptimeRepository extends Neo4jRepository<Stoptime, Long> {
                                      Pageable pageRequest);
 
     //---------------------------SPECIFIC PATH-------------------------------------------------------------------------------
-    @Query(" match (tu:Stop {name: {origStation} })--(tu_st:Stoptime)  \n" +
-            " where tu_st.departure_time > {origArrivalTimeLow}  \n" +
-            " AND tu_st.departure_time < {origArrivalTimeHigh}  \n" +
-            " with tu, tu_st  \n" +
-            " match (ant:Stop {name:{destStation}})--(ant_st:Stoptime)  \n" +
-            " where ant_st.arrival_time < {destArrivalTimeHigh}  \n" +
-            " AND ant_st.arrival_time > {destArrivalTimeLow}  \n" +
-            " and ant_st.arrival_time > tu_st.departure_time  \n" +
-            " with ant,ant_st,tu, tu_st  \n" +
-            " match p = allshortestpaths((tu_st)-[*]->(ant_st))  \n" +
-            " with nodes(p) as n, tu, ant\n" +
+    @Query(" match (s:Stop {name: {origStation} })--(st:Stoptime)  \n" +
+            " with s, st  \n" +
+            " match (e:Stop {name:{destStation}})--(et:Stoptime)  \n" +
+            " where et.arrival_time > st.departure_time  \n" +
+            " with e,et,s, st  \n" +
+            " match p = allshortestpaths((st)-[*]->(et))  \n" +
+            " with nodes(p) as n, s, e\n" +
             " unwind n as nodes  \n" +
             " match (nodes)-[r]-()  \n" +
-            " return nodes,r,tu,ant, tu.id as stopid")
+            " return nodes,r,s,e, s.id as stopid")
     Page<Stoptime> specificTrip(
                         @Param("origStation") String origStation,
-                        @Param("origArrivalTimeLow") String origArrivalTimeLow,
-                        @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
                         @Param("destStation") String destStation,
-                        @Param("destArrivalTimeLow") String destArrivalTimeLow,
-                        @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
                         Pageable pageRequest);
 
 
     //---------------------------SPECIFIC PATH WITH DISTANCE-------------------------------------------------------------------------------
-    @Query(" match (tu:Stop {name: {origStation} })--(tu_st:Stoptime)  \n" +
-            " with tu, tu_st  \n" +
-            " match (ant:Stop {name:{destStation}})--(ant_st:Stoptime)  \n" +
-            " where ant_st.arrival_time > tu_st.departure_time  \n" +
-            " with ant,ant_st,tu, tu_st  \n" +
-            " match p = allshortestpaths((tu_st)-[*]->(ant_st))  \n" +
-            " with nodes(p) as n, tu, ant, p \n" +
-            " unwind n as nodes  \n" +
-            " match (nodes)-[r]-()  \n" +
-            " return nodes, length(p) as distance")
-    Page<Stoptime> specificTripWithDistance(
+    @Query(" MATCH(s:Stop), (e:Stop)\n" +
+            "WHERE s.name starts with \"U Schlump\" and e.name = \"U Eppendorfer Baum\"\n" +
+            "match p = allshortestpaths((s)-[*]-(e))\n" +
+            "return p")
+    Page<Stoptime> allshortestpaths(
                     @Param("origStation") String origStation,
-                    @Param("origArrivalTimeLow") String origArrivalTimeLow,
-                    @Param("origArrivalTimeHigh") String origArrivalTimeHigh,
                     @Param("destStation") String destStation,
-                    @Param("destArrivalTimeLow") String destArrivalTimeLow,
-                    @Param("destArrivalTimeHigh") String destArrivalTimeHigh,
                     Pageable pageRequest);
 
 }

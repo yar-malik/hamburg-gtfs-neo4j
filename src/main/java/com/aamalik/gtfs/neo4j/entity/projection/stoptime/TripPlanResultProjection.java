@@ -9,6 +9,9 @@ public interface TripPlanResultProjection {
 
 //    public String getArrivalTime();
 //    public String getDepartureTime();
+    @Value("#{target.trips.iterator().next().getShortName()}")
+    public String getTripShortName();
+
     public int getStopSequence();
 
     @Value("#{target.stops.iterator().next().getName()}")

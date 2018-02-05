@@ -2,12 +2,9 @@ package com.aamalik.gtfs.neo4j;
 
 import com.aamalik.gtfs.neo4j.dto.TripPlan;
 import com.aamalik.gtfs.neo4j.entity.*;
-import com.aamalik.gtfs.neo4j.repository.*;
-import com.aamalik.gtfs.neo4j.entity.*;
 import com.aamalik.gtfs.neo4j.entity.projection.stoptime.TripPlanResultProjection;
 import com.aamalik.gtfs.neo4j.repository.*;
-import com.sun.corba.se.impl.orbutil.graph.Graph;
-import org.neo4j.graphalgo.GraphAlgoFactory;
+import org.neo4j.graphdb.Path;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -19,7 +16,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 @Controller
 @RequestMapping("/customrest")
@@ -66,11 +65,20 @@ public class Neo4jWebServiceController {
     @ResponseBody
     //Example id: 13
     public Route getRoute(@PathVariable String routeId, Model model) {
-        Route r = routeRepository.findByRouteId(routeId,1);
+        return routeRepository.findByRouteId(routeId,1);
+    }
+
+    @GetMapping(path = "/getStuffDone/{routeId}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    @ResponseBody
+    public Path getStuffDone(@PathVariable String routeId, Model model) {
+        Route route = routeRepository.findByRouteId(routeId,1);
+
+        Stop s1 = stopRepository.findByName("U Schlump",2);
+        Stop s2 = stopRepository.findByName("Sartoriusstraße",2);
 
         return null;
-
     }
+
 
     @GetMapping(path = "/stop/{stopName}", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
@@ -92,7 +100,6 @@ public class Neo4jWebServiceController {
     //Example id: 22
     public Trip getTrip(@PathVariable String tripId, Model model) {
         return tripRepository.findByTripId(tripId, 1);
-
     }
 
     @RequestMapping(value = "/planTripNoTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -126,22 +133,17 @@ public class Neo4jWebServiceController {
         return allPlansWithLegs;
     }
 
-    @RequestMapping(value = "/oneTransfer", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/allshortestpaths", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public ArrayList <ArrayList <ArrayList<Stoptime>>>  oneTransfer( @RequestBody TripPlan plan){
+    public ArrayList <ArrayList <ArrayList<Stoptime>>>  allshortestpaths( @RequestBody TripPlan plan){
 
         ArrayList<ArrayList<ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
-        Sort sort = new Sort(Sort.Direction.ASC, "stopid");
-        Pageable pageable = new PageRequest(0, 1000, sort);
+        Pageable pageable = new PageRequest(0, 1000, null);
 
-        Page<Stoptime> imResult = stoptimeRepository.oneTransfer(
+        Page<Stoptime> imResult = stoptimeRepository.allshortestpaths(
                 plan.getOrigStation(),
-                plan.getOrigArrivalTimeLow(),
-                plan.getOrigArrivalTimeHigh(),
                 plan.getDestStation(),
-                plan.getDestArrivalTimeLow(),
-                plan.getDestArrivalTimeHigh(),
                 pageable);
 
         System.out.println(imResult);
@@ -172,11 +174,7 @@ public class Neo4jWebServiceController {
                         plan.getDestStation(),
                         pageable);
 
-//        System.out.println("shortestpath: "+ resultlist);
-
         ArrayList <ArrayList<Stoptime>> finalResult = breakupTrips( resultlist);
-
-//        System.out.println("finalResult: " + finalResult);
 
         for (ArrayList<Stoptime> leg : finalResult) {
             ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
@@ -198,46 +196,10 @@ public class Neo4jWebServiceController {
 
         Page<Stoptime> imResult = stoptimeRepository.specificTrip(
                 plan.getOrigStation(),
-                plan.getOrigArrivalTimeLow(),
-                plan.getOrigArrivalTimeHigh(),
                 plan.getDestStation(),
-                plan.getDestArrivalTimeLow(),
-                plan.getDestArrivalTimeHigh(),
                 pageable);
 
         ArrayList <ArrayList<Stoptime>> finalResult = breakupTrips( imResult);
-
-        for (ArrayList<Stoptime> leg : finalResult) {
-            ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
-            planWithLegs.add(leg);
-            allPlansWithLegs.add((planWithLegs));
-        }
-
-        return allPlansWithLegs;
-    }
-
-    @RequestMapping(value = "/specificTripWithDistance", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ArrayList <ArrayList <ArrayList<Stoptime>>> specificRouteWithDistance(@RequestBody TripPlan plan){
-
-        ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
-
-        Sort sort = new Sort(Sort.Direction.ASC, "distance");
-        Pageable pageable = new PageRequest(0, 100, sort);
-
-        Page<Stoptime> imResult = stoptimeRepository.specificTripWithDistance(
-                plan.getOrigStation(),
-                plan.getOrigArrivalTimeLow(),
-                plan.getOrigArrivalTimeHigh(),
-                plan.getDestStation(),
-                plan.getDestArrivalTimeLow(),
-                plan.getDestArrivalTimeHigh(),
-                pageable);
-
-        System.out.println("imResult: " + imResult);
-        System.out.println("imResult Element: " + imResult.getTotalElements());
-
-        ArrayList <ArrayList<Stoptime>> finalResult = breakupDistance(imResult);
 
         for (ArrayList<Stoptime> leg : finalResult) {
             ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
@@ -282,6 +244,7 @@ public class Neo4jWebServiceController {
     }
 
 
+
     private  ArrayList <ArrayList<Stoptime>> breakupTrips(Page<Stoptime> test) {
         return breakupTrips(test.getContent());
     }
@@ -310,4 +273,16 @@ public class Neo4jWebServiceController {
         }
         return result;
     }
+
+//    private Path testGraphAlgoFactory(Stop s1, Stop s2){
+//
+//        PathExpander expander = PathExpanders.allTypesAndDirections();
+//        PathFinder<Path> pathFinder =
+//                GraphAlgoFactory.shortestPath(expander , 6);
+//
+//        Path path = pathFinder.findSinglePath(s1, s2.);
+//        System.out.println("path: " + path);
+//
+//        return path;
+//    }
 }

@@ -19,6 +19,9 @@ public class Trip {
     @Property(name="service_id")
     private String serviceId;
 
+    @Property(name="short_name")
+    private String shortName;
+
     @Relationship(type = "USES")
     public Set<Route> routes;
 
@@ -43,6 +46,10 @@ public class Trip {
     public void setTripId(String tripId) {
         this.tripId = tripId;
     }
+
+    public String getShortName() { return shortName; }
+
+    public void setShortName(String shortName) { this.shortName = shortName; }
 
     public String getServiceId() {
         return serviceId;
