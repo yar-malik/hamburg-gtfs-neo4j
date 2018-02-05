@@ -8,6 +8,7 @@
 
 
 First task is to populate the Neo4j Database. Follwing queries were used for it.
+
 ``
  create constraint on (a:Agency) assert a.id is unique;  
  create constraint on (r:Route) assert r.id is unique;  
@@ -16,10 +17,10 @@ First task is to populate the Neo4j Database. Follwing queries were used for it.
  create constraint on (s:Stop) assert s.id is unique;  
  create index on :Stoptime(stop_sequence);  
  create index on :Stop(name);
-
 ``
 
 * Add Agency: 
+
 ``
  load csv with headers from  
  'file:///hamburg/agency.txt' as csv  
@@ -27,6 +28,7 @@ First task is to populate the Neo4j Database. Follwing queries were used for it.
 ``
 
 * Add Routes
+
 ``
  load csv with headers from  
  'file:///ns/routes.txt' as csv  
@@ -35,6 +37,7 @@ First task is to populate the Neo4j Database. Follwing queries were used for it.
  ``
 
 * Add Trips
+
 ``
  load csv with headers from  
  'file:///hamburg/trips.txt' as csv  
@@ -51,6 +54,7 @@ load csv with headers from
  ``
 
 * Add Parent Child relationship between Stops
+
 ``
  load csv with headers from  
  'file:///hamburg/stops.txt' as csv  
@@ -94,6 +98,7 @@ match (s1:Stoptime)-[:PART_OF_TRIP]->(t:Trip),
 ``
 
 * Create Transfers
+
 ``
 load csv with headers from  
  'file:///hamburg/transfers.txt' as csv  
@@ -101,6 +106,7 @@ load csv with headers from
  ``
 
 * Connect Stops with Transfers
+
 ``
 match(s:Stop), (t:Transfer)
 where t.fromStop = s.id
