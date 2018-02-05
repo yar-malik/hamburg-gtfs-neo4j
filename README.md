@@ -69,7 +69,8 @@ load csv with headers from
  with csv  
  where not (csv.parent_station is null)  
  match (ps:Stop {id: csv.parent_station}), (s:Stop {id: csv.stop_id})  
- create (ps)<-[:PART_OF]-(s); ```
+ create (ps)<-[:PART_OF]-(s); 
+ ```
 
 * Add Stoptimes
 (File is around 76 MB so use periodic commit)
