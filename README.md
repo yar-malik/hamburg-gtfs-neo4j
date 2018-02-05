@@ -7,7 +7,12 @@
 * GTFS zip file is also commited in the code with the name `gtfs-hamburg.zip`
 
 # Neo4j Data Population with Hamburg GTFS
-First task is to populate the Neo4j Database. Follwing queries were used for it.
+
+Our Neo4j Database Schema is as follows: 
+
+![Neo4j Database Schema](https://raw.githubusercontent.com/aamalik/hamburg-gtfs-neo4j/master/graph.png)
+
+Following queries are used to populate the Database: 
 
 ``
  create constraint on (a:Agency) assert a.id is unique;  
