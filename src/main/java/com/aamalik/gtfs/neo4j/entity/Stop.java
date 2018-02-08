@@ -21,6 +21,9 @@ public class Stop {
     @Property(name="id")
     private String stopId;
 
+    @Property(name="parent_station")
+    private String parent_station;
+
     public Long getId() {
         return id;
     }
@@ -59,5 +62,13 @@ public class Stop {
 
     public void setStopId(String stopId) {
         this.stopId = stopId;
+    }
+
+    public String getParent_station() {
+        return parent_station;
+    }
+
+    public void setParent_station(String parent_station) {
+        this.parent_station = parent_station;
     }
 }

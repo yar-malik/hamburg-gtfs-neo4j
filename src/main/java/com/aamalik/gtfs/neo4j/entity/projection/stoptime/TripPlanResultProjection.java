@@ -17,6 +17,9 @@ public interface TripPlanResultProjection {
     @Value("#{target.stops.iterator().next().getName()}")
     public String getStopName();
 
+    @Value("#{target.trips.iterator().next().getHeadsign()}")
+    public String getHeadsign();
+
     @Value("#{target.stops.iterator().next().getLongitude()}")
     public String getLongitude();
 
@@ -26,5 +29,4 @@ public interface TripPlanResultProjection {
     @Value("#{target.trips.iterator().next().getTripId()}")
     public String getTripId();
 
-    //Set<TripNoBackrefsPjcn> getTrips();
 }

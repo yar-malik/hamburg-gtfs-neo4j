@@ -22,6 +22,9 @@ public class Trip {
     @Property(name="short_name")
     private String shortName;
 
+    @Property(name="headsign")
+    private String headsign;
+
     @Relationship(type = "USES")
     public Set<Route> routes;
 
@@ -50,6 +53,14 @@ public class Trip {
     public String getShortName() { return shortName; }
 
     public void setShortName(String shortName) { this.shortName = shortName; }
+
+    public String getHeadsign() {
+        return headsign;
+    }
+
+    public void setHeadsign(String headsign) {
+        this.headsign = headsign;
+    }
 
     public String getServiceId() {
         return serviceId;
