@@ -5,6 +5,8 @@ import com.aamalik.gtfs.neo4j.entity.*;
 import com.aamalik.gtfs.neo4j.entity.projection.stoptime.TripPlanResultProjection;
 import com.aamalik.gtfs.neo4j.repository.*;
 import org.neo4j.graphdb.Path;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,10 +18,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.lang.reflect.Array;
+import java.util.*;
 
 @Controller
 @RequestMapping("/customrest")
@@ -56,7 +56,7 @@ public class Neo4jWebServiceController {
     public Agency getAgency(@PathVariable String agencyId, Model model) {
         return agencyRepository.findByAgencyId(agencyId,1);
     }
-;
+
     @GetMapping(path = "/agency/{agencyId}/routes", produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     @ResponseBody
     //Example id: HVV
@@ -138,7 +138,7 @@ public class Neo4jWebServiceController {
 
         ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
-        Sort sort = null;
+        Sort sort = new Sort(Sort.Direction.ASC, "tripId", "stopSequence");
         Pageable pageable = new PageRequest(0, 100000, sort);
 
         Page<Stoptime> imResult = stoptimeRepository.specificTripOneDirection(
@@ -154,6 +154,8 @@ public class Neo4jWebServiceController {
             allPlansWithLegs.add((planWithLegs));
         }
 
+        System.out.println("allPlansWithLegs: " + allPlansWithLegs);
+
         return allPlansWithLegs;
     }
 
@@ -163,11 +165,10 @@ public class Neo4jWebServiceController {
 
         ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
-        Sort sort = null;
+        Sort sort = new Sort(Sort.Direction.ASC, "tripId", "stopSequence");
         Pageable pageable = new PageRequest(0, 100000, sort);
 
-        Page<Stoptime> imResult = stoptimeRepository.specificTripBothDirection(
-                pageable);
+        Page<Stoptime> imResult = stoptimeRepository.specificTripBothDirection(pageable);
 
         ArrayList <ArrayList<Stoptime>> finalResult = breakupTrips( imResult);
 
@@ -177,77 +178,201 @@ public class Neo4jWebServiceController {
             allPlansWithLegs.add((planWithLegs));
         }
 
+        System.out.println("allPlansWithLegs: " + allPlansWithLegs);
+        System.out.println("allPlansWithimResultLegsX: " + allPlansWithLegs.get(0).get(0));
+
         return allPlansWithLegs;
     }
 
     //------------------------------TESTING------------------------------
 
-    @RequestMapping(value = "/specificTripBothDirectionCustom", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @RequestMapping(value = "/findPathMitUmSteigen", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public List<Map<String, Stop>> specificTripBothDirectionCustom(@RequestBody TripPlan plan){
+    public ArrayList <ArrayList <TripPlanResultProjection>> findPathMitUmSteigen(@RequestBody TripPlan plan){
 
-        List<Map<String, Stop>> imResult = pathRepository.checkStop();
-        System.out.println("XX imResult size: " + imResult.size());
-        System.out.println("XX imResult: " + imResult);
+        ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
 
-        return imResult;
+//        Sort sort = new Sort(Sort.Direction.ASC, "tripId", "stopSequence");
+        Pageable pageable = new PageRequest(0, 100000, null);
+
+        Iterable<Map<String,Object>> allResults = stoptimeRepository.findPathMitUmSteigen();
+        ArrayList <ArrayList<Stoptime>> result = new ArrayList<>();
+
+        ArrayList currentSet = null;
+
+        JSONArray allGlobalFinalResults = new JSONArray();
+
+        ArrayList<ArrayList<TripPlanResultProjection>> myXXListTotal = new ArrayList<ArrayList<TripPlanResultProjection>>();
+
+
+        for (Map<String, Object> row : allResults) {
+            JSONArray allLocalFinalResults = new JSONArray();
+            JSONObject localJsonObject = new JSONObject();
+            List<Object> nodes = (List) row.get("nodes");
+            List<Object> rels = (List) row.get("rels");
+
+            ArrayList<TripPlanResultProjection> myXXList = new ArrayList<>();
+
+            for (Object obj : nodes) {
+
+                if (obj instanceof Stoptime) {
+
+                    Stoptime stoptime = (Stoptime) obj;
+
+                    Set<Trip> newTrips = new HashSet<>();
+                    Set<Stop> newStops = new HashSet<>();
+
+                    if(stoptime.getTrips() == null){
+                        Trip t = tripRepository.findByTripId(stoptime.getTrip_id(), 1);
+                        newTrips.add(t);
+                        stoptime.setTrips(newTrips);
+                    }
+
+                    if(stoptime.getStops() == null){
+                        Stop s = stopRepository.findByStopId(stoptime.getStop_id(), 1);
+                        newStops.add(s);
+                        stoptime.setStops(newStops);
+                    }
+
+                    TripPlanResultProjection tripPlan = projectionFactory.createProjection(TripPlanResultProjection.class, stoptime);
+                    myXXList.add(tripPlan);
+                }
+            }
+            myXXListTotal.add(myXXList);
+
+        }
+
+        return myXXListTotal;
     }
 
-    @RequestMapping(value = "/apocAlgoAllSimplePaths", method = RequestMethod.POST)
+    @RequestMapping(value = "/findPathMitWeights", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
-    public List<Map<String,Object>> apocAlgoAllSimplePaths(@RequestBody TripPlan plan){
+    public JSONArray findPathMitWeights(@RequestBody TripPlan plan){
 
-        List<Map<String,Object>> imResult = pathRepository.apocAlgoAllSimplePaths();
-        System.out.println("imResult size: " + imResult.size());
-        System.out.println("imResult: " + imResult);
+        ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
+        Pageable pageable = new PageRequest(0, 100000, null);
 
-        return imResult;
+        Iterable<Map<String,Object>> allResults = stoptimeRepository.findPathMitWeights();
+        ArrayList <ArrayList<Stoptime>> result = new ArrayList<>();
+        ArrayList<ArrayList<TripPlanResultProjection>> myXXListTotal = new ArrayList<ArrayList<TripPlanResultProjection>>();
+        JSONArray totalFinalResults = new JSONArray();
+
+        for (Map<String, Object> row : allResults) {
+
+            JSONArray allLocalFinalResults = new JSONArray();
+            JSONObject jsonObjekt = new JSONObject();
+
+            List<Object> nodes = (List) row.get("nodes");
+            List<Object> rels = (List) row.get("rels");
+            Integer totalWeight = (Integer)row.get("totalWeight");
+
+            ArrayList<TripPlanResultProjection> myXXList = new ArrayList<>();
+
+            for (Object obj : nodes) {
+
+                if (obj instanceof Stoptime) {
+
+                    JSONObject oneStopTimeObject = new JSONObject();
+                    Stoptime stoptime = (Stoptime) obj;
+
+                    Set<Trip> newTrips = new HashSet<>();
+                    Set<Stop> newStops = new HashSet<>();
+
+                    if(stoptime.getTrips() == null){
+                        Trip t = tripRepository.findByTripId(stoptime.getTrip_id(), 1);
+                        newTrips.add(t);
+                        stoptime.setTrips(newTrips);
+                    }
+
+                    if(stoptime.getStops() == null){
+                        Stop s = stopRepository.findByStopId(stoptime.getStop_id(), 1);
+                        newStops.add(s);
+                        stoptime.setStops(newStops);
+                    }
+
+                    oneStopTimeObject.put("trip_id", stoptime.getTrips().iterator().next().getTripId());
+                    oneStopTimeObject.put("stopSequence", stoptime.getStopSequence());
+                    oneStopTimeObject.put("latitude", stoptime.getStops().iterator().next().getLatitude());
+                    oneStopTimeObject.put("longitude", stoptime.getStops().iterator().next().getLatitude());
+                    oneStopTimeObject.put("stopName", stoptime.getStops().iterator().next().getName());
+                    oneStopTimeObject.put("stop_Id", stoptime.getStops().iterator().next().getStopId());
+                    oneStopTimeObject.put("headsign", stoptime.getTrips().iterator().next().getHeadsign());
+                    oneStopTimeObject.put("tripShortName", stoptime.getTrips().iterator().next().getShortName());
+                    allLocalFinalResults.add(oneStopTimeObject);
+                }
+            }
+
+            jsonObjekt.put("trip", allLocalFinalResults);
+            jsonObjekt.put("totalWeight", totalWeight);
+
+            totalFinalResults.add(jsonObjekt);
+
+        }
+
+        return totalFinalResults;
     }
 
-    private  ArrayList <ArrayList<Stoptime>> breakupDistance(Page<Stoptime> test) {
+    @RequestMapping(value = "/apocAlgoAllSimplePaths", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ArrayList <ArrayList <ArrayList<Stoptime>>> apocAlgoAllSimplePaths(@RequestBody TripPlan plan) {
 
+        System.out.println("======================");
+
+        ArrayList <ArrayList <ArrayList<Stoptime>>> allPlansWithLegs = new ArrayList<>();
+
+        Pageable pageable = new PageRequest(0, 100000, null);
+
+        Page<PathObject> imResult = pathRepository.apocAlgoAllSimplePaths(pageable);
         ArrayList <ArrayList<Stoptime>> result = new ArrayList<>();
 
         String lastTripId = null;
         ArrayList currentSet = null;
 
-        System.out.println("Content: " + test.getContent());
+        System.out.println("imResult: " + imResult);
 
-        for (Stoptime stoptime: test.getContent()) {
+        for (PathObject stoptime: imResult.getContent()) {
+//            System.out.println("weight.getStoptimeList: " + weight.getStoptimeList());
+            System.out.println("weight.getStoptimeList: ");
 
-//            System.out.println("stoptime: " + stoptime);
-            System.out.println("stoptime: " + stoptime.getTrips());
-
-            if(stoptime.getTrips() != null) {
-                Trip currentTrip = stoptime.getTrips().iterator().next();
-
-                if (lastTripId == null || !lastTripId.equals(currentTrip.getTripId())) {
-                    currentSet = new ArrayList<Stoptime>();
-                    result.add(currentSet);
-                    lastTripId = currentTrip.getTripId();
-                }
-
-                System.out.println("currentSet: " + currentSet);
-                TripPlanResultProjection tripPlan = projectionFactory.createProjection(TripPlanResultProjection.class, stoptime);
-
-                currentSet.add(tripPlan);
-            }
+//            for(Stoptime stoptime: weight.getStoptimeList()){
+//                if(stoptime.getTrips() != null) {
+//                    System.out.println("Entering this loop ");
+//                    Trip currentTrip = stoptime.getTrips().iterator().next();
+//
+//                    if (lastTripId == null || !lastTripId.equals(currentTrip.getTripId())) {
+//                        currentSet = new ArrayList<Stoptime>();
+//                        result.add(currentSet);
+//                        lastTripId = currentTrip.getTripId();
+//                    }
+//
+//                    TripPlanResultProjection tripPlan = projectionFactory.createProjection(TripPlanResultProjection.class, stoptime);
+//                    currentSet.add(tripPlan);
+//                }
+//            }
         }
-        return result;
+
+        ArrayList <ArrayList<Stoptime>> finalResult = result;
+
+        for (ArrayList<Stoptime> leg : finalResult) {
+            ArrayList <ArrayList<Stoptime>> planWithLegs = new ArrayList<>();
+            planWithLegs.add(leg);
+            allPlansWithLegs.add((planWithLegs));
+        }
+        System.out.println("allPlansWithLegs: " + allPlansWithLegs);
+//        System.out.println("allPlansWithimResultLegsX: " + allPljansWithLegs.get(0).get(0));
+
+        return allPlansWithLegs;
 
     }
 
     private  ArrayList <ArrayList<Stoptime>> breakupTrips(Page<Stoptime> test) {
-        return breakupTrips(test.getContent());
-    }
 
-    private  ArrayList <ArrayList<Stoptime>> breakupTrips(List<Stoptime> test) {
         ArrayList <ArrayList<Stoptime>> result = new ArrayList<>();
 
         String lastTripId = null;
         ArrayList currentSet = null;
 
-        for (Stoptime stoptime: test) {
+        for (Stoptime stoptime: test.getContent()) {
 
             if(stoptime.getTrips() != null) {
                 Trip currentTrip = stoptime.getTrips().iterator().next();
@@ -259,11 +384,11 @@ public class Neo4jWebServiceController {
                 }
 
                 TripPlanResultProjection tripPlan = projectionFactory.createProjection(TripPlanResultProjection.class, stoptime);
-
                 currentSet.add(tripPlan);
             }
         }
+        System.out.println("result: " + result);
+
         return result;
     }
-
 }

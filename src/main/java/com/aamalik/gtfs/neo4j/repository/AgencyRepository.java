@@ -10,6 +10,6 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 @RepositoryRestResource(collectionResourceRel = "agency", path = "agency")
 public interface AgencyRepository extends Neo4jRepository<Agency, Long> {
 
-    Agency findByAgencyId(@Param("agencyId") String agencyId, @Depth @Param("depth") int depth);
+    Agency findByAgencyId(@Param("agencyId") String agencyId, @Depth @Param("depth") Integer depth);
 
 }

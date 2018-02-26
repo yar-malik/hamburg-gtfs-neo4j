@@ -3,6 +3,9 @@ package com.aamalik.gtfs.neo4j.entity;
 import org.neo4j.ogm.annotation.GraphId;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;
+import org.neo4j.ogm.annotation.Relationship;
+
+import java.util.Set;
 
 @NodeEntity
 public class PathObject {
@@ -13,25 +16,25 @@ public class PathObject {
     private String arrivalTime;
 
     @Property(name="stop_sequence")
-    private int stopSequence;
+    private Integer stopSequence;
 
-    @Property(name="trip_id")
-    private int tripId;
+    @Property(name="departure_time_int")
+    private Integer departureTimeInt;
 
-    @Property(name="longitude")
-    private int longitude;
+    @Property(name="arrival_time_int")
+    private Integer arrivalTimeInt;
 
-    @Property(name="latitude")
-    private int latitude;
+    @Property(name="departure_time")
+    private String departureTime;
 
-    @Property(name="headsign")
-    private String headsign;
+    @Relationship(type = "LOCATED_AT", direction = Relationship.OUTGOING)
+    private Set<Stop> stops;
 
-    @Property(name="tripShortName")
-    private String tripShortName;
+    @Relationship(type = "PART_OF_TRIP")
+    public Set<Trip> trips;
 
-    @Property(name="name")
-    private String stopName;
+    @Relationship(type = "PRECEDES")
+    public Set<Stoptime> precedesTime;
 
     public Long getId() {
         return id;
@@ -49,59 +52,59 @@ public class PathObject {
         this.arrivalTime = arrivalTime;
     }
 
-    public int getStopSequence() {
+    public Integer getStopSequence() {
         return stopSequence;
     }
 
-    public void setStopSequence(int stopSequence) {
+    public void setStopSequence(Integer stopSequence) {
         this.stopSequence = stopSequence;
     }
 
-    public int getTripId() {
-        return tripId;
+    public Integer getDepartureTimeInt() {
+        return departureTimeInt;
     }
 
-    public void setTripId(int tripId) {
-        this.tripId = tripId;
+    public void setDepartureTimeInt(Integer departureTimeInt) {
+        this.departureTimeInt = departureTimeInt;
     }
 
-    public int getLongitude() {
-        return longitude;
+    public Integer getArrivalTimeInt() {
+        return arrivalTimeInt;
     }
 
-    public void setLongitude(int longitude) {
-        this.longitude = longitude;
+    public void setArrivalTimeInt(Integer arrivalTimeInt) {
+        this.arrivalTimeInt = arrivalTimeInt;
     }
 
-    public int getLatitude() {
-        return latitude;
+    public String getDepartureTime() {
+        return departureTime;
     }
 
-    public void setLatitude(int latitude) {
-        this.latitude = latitude;
+    public void setDepartureTime(String departureTime) {
+        this.departureTime = departureTime;
     }
 
-    public String getHeadsign() {
-        return headsign;
+    public Set<Stop> getStops() {
+        return stops;
     }
 
-    public void setHeadsign(String headsign) {
-        this.headsign = headsign;
+    public void setStops(Set<Stop> stops) {
+        this.stops = stops;
     }
 
-    public String getTripShortName() {
-        return tripShortName;
+    public Set<Trip> getTrips() {
+        return trips;
     }
 
-    public void setTripShortName(String tripShortName) {
-        this.tripShortName = tripShortName;
+    public void setTrips(Set<Trip> trips) {
+        this.trips = trips;
     }
 
-    public String getStopName() {
-        return stopName;
+    public Set<Stoptime> getPrecedesTime() {
+        return precedesTime;
     }
 
-    public void setStopName(String stopName) {
-        this.stopName = stopName;
+    public void setPrecedesTime(Set<Stoptime> precedesTime) {
+        this.precedesTime = precedesTime;
     }
 }

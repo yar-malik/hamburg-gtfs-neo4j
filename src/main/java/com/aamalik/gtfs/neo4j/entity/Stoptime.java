@@ -16,18 +16,24 @@ public class Stoptime {
     private String arrivalTime;
 
     @Property(name="stop_sequence")
-    private int stopSequence;
+    private Integer stopSequence;
 
-    @Property(name="departure_time_int")
-    private int departureTimeInt;
-
-    @Property(name="arrival_time_int")
-    private int arrivalTimeInt;
+//    @Property(name="departure_time_int")
+//    private Integer departureTimeInt;
+//
+//    @Property(name="arrival_time_int")
+//    private Integer arrivalTimeInt;
 
     @Property(name="departure_time")
     private String departureTime;
 
-    @Relationship(type = "LOCATED_AT", direction = Relationship.OUTGOING)
+    @Property(name="tripId")
+    private String trip_id;
+
+    @Property(name="stopId")
+    private String stop_id;
+
+    @Relationship(type = "LOCATED_AT")
     private Set<Stop> stops;
 
     @Relationship(type = "PART_OF_TRIP")
@@ -52,29 +58,29 @@ public class Stoptime {
         this.arrivalTime = arrivalTime;
     }
 
-    public int getStopSequence() {
+    public Integer getStopSequence() {
         return stopSequence;
     }
 
-    public void setStopSequence(int stopSequence) {
+    public void setStopSequence(Integer stopSequence) {
         this.stopSequence = stopSequence;
     }
 
-    public int getDepartureTimeInt() {
-        return departureTimeInt;
-    }
-
-    public void setDepartureTimeInt(int departureTimeInt) {
-        this.departureTimeInt = departureTimeInt;
-    }
-
-    public int getArrivalTimeInt() {
-        return arrivalTimeInt;
-    }
-
-    public void setArrivalTimeInt(int arrivalTimeInt) {
-        this.arrivalTimeInt = arrivalTimeInt;
-    }
+//    public Integer getDepartureTimeInt() {
+//        return departureTimeInt;
+//    }
+//
+//    public void setDepartureTimeInt(Integer departureTimeInt) {
+//        this.departureTimeInt = departureTimeInt;
+//    }
+//
+//    public Integer getArrivalTimeInt() {
+//        return arrivalTimeInt;
+//    }
+//
+//    public void setArrivalTimeInt(Integer arrivalTimeInt) {
+//        this.arrivalTimeInt = arrivalTimeInt;
+//    }
 
     public String getDepartureTime() {
         return departureTime;
@@ -106,5 +112,38 @@ public class Stoptime {
 
     public void setPrecedesTime(Set<Stoptime> precedesTime) {
         this.precedesTime = precedesTime;
+    }
+
+    public String getTrip_id() {
+        return trip_id;
+    }
+
+    public void setTrip_id(String trip_id) {
+        this.trip_id = trip_id;
+    }
+
+    public String getStop_id() {
+        return stop_id;
+    }
+
+    public void setStop_id(String stop_id) {
+        this.stop_id = stop_id;
+    }
+
+    @Override
+    public String toString() {
+        return "Stoptime{" +
+                "id=" + id +
+                ", arrivalTime='" + arrivalTime + '\'' +
+                ", stopSequence=" + stopSequence +
+//                ", departureTimeInt=" + departureTimeInt +
+//                ", arrivalTimeInt=" + arrivalTimeInt +
+                ", departureTime='" + departureTime + '\'' +
+//                ", trip_id='" + trip_id + '\'' +
+//                ", stop_id='" + stop_id + '\'' +
+                ", stops=" + stops +
+                ", trips=" + trips +
+                ", precedesTime=" + precedesTime +
+                '}';
     }
 }

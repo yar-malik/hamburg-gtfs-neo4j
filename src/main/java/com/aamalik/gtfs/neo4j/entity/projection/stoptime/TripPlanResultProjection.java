@@ -7,12 +7,11 @@ import org.springframework.data.rest.core.config.Projection;
 @Projection(name = "TripPlanResult", types = { Stoptime.class })
 public interface TripPlanResultProjection {
 
-//    public String getArrivalTime();
-//    public String getDepartureTime();
     @Value("#{target.trips.iterator().next().getShortName()}")
     public String getTripShortName();
 
-    public int getStopSequence();
+    public Integer getStopSequence();
+    public Integer getTrip_id();
 
     @Value("#{target.stops.iterator().next().getName()}")
     public String getStopName();
@@ -26,7 +25,7 @@ public interface TripPlanResultProjection {
     @Value("#{target.stops.iterator().next().getLatitude()}")
     public String getLatitude();
 
-    @Value("#{target.trips.iterator().next().getTripId()}")
-    public String getTripId();
+    @Value("#{target.stops.iterator().next().getStopId()}")
+    public String getStop_Id();
 
 }

@@ -55,7 +55,7 @@ match (s:Stop)--(st:Stoptime), (e:Stop)--(et:Stoptime)
 where s.name IN [ 'Schlump', 'U Schlump'] 
 	and e.name IN ['Hauptbahnhof Süd', 'HBF/Steintorwall' , 'Hamburg Hbf', 'Hauptbahnhof Nord', 'Hamburg Hbf (Kirchenallee)', 'Hauptbahnhof/ZOB', 'HBF/Mönckebergstraße' ] 
 CALL apoc.algo.allSimplePaths(st, et, 'PRECEDES', 20) yield path as path
-RETURN path
+RETURN s, st, e, et path
 
 -----------------------In Direct Routes--------------------------------
 MATCH(s:Stop)--(st:Stoptime),
@@ -69,7 +69,7 @@ RETURN p,s,e,
 reduce(distance=0, r in relationships(p) | distance + toInt(r.weight)) AS totalDistance
        ORDER BY totalDistance ASC
 
------------
+--------------------------------------------
 
 MATCH(s:Stop)--(st:Stoptime),
 (e:Stop)--(et:Stoptime)
@@ -87,10 +87,21 @@ reduce(distance=0, r in relationships(p) | distance + toInt(r.weight)) AS totalD
 
 MATCH(s:Stop)--(st:Stoptime),
 (e:Stop)--(et:Stoptime)
-where s.name IN [ 'Schlump', 'U Schlump'] 
+where s.name IN [ 'Dörpsweg'] 
 	and e.name IN ['Hauptbahnhof Süd', 'HBF/Steintorwall' , 'Hamburg Hbf', 'Hauptbahnhof Nord', 'Hamburg Hbf (Kirchenallee)', 'Hauptbahnhof/ZOB', 'HBF/Mönckebergstraße' ]  
 MATCH p = shortestpath((st)-[*]-(et))
 WHERE ALL (r IN relationships(p) WHERE type(r) = 'PRECEDES' OR type(r) = 'LOCATED_AT')
 RETURN p,s,e,
 reduce(distance=0, r in relationships(p) | distance+ toInt(r.weight)) AS totalDistance
        ORDER BY totalDistance ASC     
+
+
+match (s:Stop)--(st:Stoptime), (e:Stop)--(et:Stoptime) 
+where s.name IN [ 'Dörpsweg'] 
+	and e.name IN ['Hauptbahnhof Süd', 'HBF/Steintorwall' , 'Hamburg Hbf', 'Hauptbahnhof Nord', 'Hamburg Hbf (Kirchenallee)', 'Hauptbahnhof/ZOB', 'HBF/Mönckebergstraße' ] 
+CALL apoc.algo.allSimplePaths(st, et, 'PRECEDES|TRANSFER|PART_OF|LOCATED_AT', 100) yield path as path
+RETURN path
+
+
+
+Dörpsweg

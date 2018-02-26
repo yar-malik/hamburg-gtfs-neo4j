@@ -6,5 +6,5 @@ import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.repository.query.Param;
 
 public interface TripRepository extends Neo4jRepository<Trip, Long> {
-    Trip findByTripId(@Param("tripId") String tripId, @Depth @Param("depth") int depth);
+    Trip findByTripId(@Param("tripId") String tripId, @Depth @Param("depth") Integer depth);
 }

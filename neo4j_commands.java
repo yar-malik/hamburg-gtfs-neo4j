@@ -93,7 +93,7 @@ match (tu:Stop {name: "U Schlump"})--(tu_st:Stoptime)
  	and not (s1)-[:PRECEDES]->(s2)  
  create (s1)-[:PRECEDES]->(s2); 
 
-----------------------Shortest Path Between Atations-----------------------------------
+----------------------Shortest Path Between Stations-----------------------------------
 MATCH (s:Stop {name:"U Schlump"})--(sTime:Stoptime),
 (e:Stop {name:"Sartoriusstraße"})--(eTime:Stoptime)
 where sTime.departure_time > "20:00:00" AND sTime.departure_time < "22:00:00"  and  eTime.arrival_time < "22:00:00"  

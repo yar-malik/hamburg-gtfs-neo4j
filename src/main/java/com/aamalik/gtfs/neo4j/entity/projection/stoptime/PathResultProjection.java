@@ -12,7 +12,7 @@ public interface PathResultProjection {
     @Value("#{target.trips.iterator().next().getShortName()}")
     public String getTripShortName();
 
-    public int getStopSequence();
+    public Integer getStopSequence();
 
     @Value("#{target.stops.iterator().next().getName()}")
     public String getStopName();
